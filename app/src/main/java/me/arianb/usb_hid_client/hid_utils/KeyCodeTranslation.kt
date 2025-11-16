@@ -51,19 +51,20 @@ object KeyCodeTranslation {
     fun keyCodeToScanCode(keyCode: Int): Byte? =
         hidKeyCodes[keyEventKeys[keyCode]]
 
+    private fun isBitEnabledInMask(data: Int, mask: Int): Boolean {
+        val isPresent: Boolean = (data and mask) == mask
+
+        return isPresent
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
     fun getModifiersScanCode(event: KeyEvent): Byte {
         var modifier: Byte = 0x0
-        if (event.isShiftPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_SHIFT_LEFT_ON)
-        }
-        if (event.isCtrlPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_CTRL_LEFT_ON)
-        }
-        if (event.isAltPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_ALT_LEFT_ON)
-        }
-        if (event.isMetaPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_META_LEFT_ON)
+        for ((modifierKeyCode: Int, _) in keyEventModifierKeys) {
+            if (isBitEnabledInMask(event.modifiers, modifierKeyCode)) {
+                val scanCode = modifierKeyCodeToScanCode(modifierKeyCode)
+                modifier = modifier or scanCode
+            }
         }
 
         return modifier

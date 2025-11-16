@@ -1,5 +1,6 @@
 package me.arianb.usb_hid_client.input_views
 
+import android.os.Build
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.BaseInputConnection
@@ -44,8 +45,20 @@ class MyInputConnection(
             return true
         }
 
+        val attemptRawKeyCodeTranslation = true
+
         // Handle the key itself
-        val keyScanCode = KeyCodeTranslation.keyCodeToScanCode(keyCode)
+        val keyScanCode: Byte? = if (attemptRawKeyCodeTranslation) {
+            val rawKeyCode = getRawKeyCode(event, keyCode)
+            if (rawKeyCode != null) {
+                KeyCodeTranslation.keyCodeToScanCode(rawKeyCode)
+            } else {
+                null
+            }
+        } else {
+            null
+        } ?: KeyCodeTranslation.keyCodeToScanCode(keyCode)
+
         if (keyScanCode == null) {
             Timber.w("Unsupported keycode '${KeyEvent.keyCodeToString(keyCode)}' ($keyCode). This is probably a bug.")
             return false
@@ -61,6 +74,21 @@ class MyInputConnection(
         }
 
         return true
+    }
+
+    private fun getRawKeyCode(event: KeyEvent, keyCode: Int): Int? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val device = event.device
+            if (device == null) {
+                Timber.w("keyCode for location (Android Key Code): %s", "device is null")
+            } else {
+                val keyCodeForLocation = device.getKeyCodeForKeyLocation(keyCode)
+                Timber.d("keyCode for location (Android Key Code): %s", keyCodeForLocation)
+                return keyCodeForLocation
+            }
+        }
+
+        return null
     }
 
     override fun commitText(text: CharSequence, newCursorPosition: Int, textAttribute: TextAttribute?): Boolean {
