@@ -1,8 +1,6 @@
 package me.arianb.usb_hid_client.hid_utils
 
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -10,19 +8,31 @@ import android.os.Message
 import android.os.Messenger
 import android.os.Parcelable
 import android.os.Process
-import android.os.RemoteException
 import com.topjohnwu.superuser.Shell
 import com.topjohnwu.superuser.ipc.RootService
 import kotlinx.parcelize.Parcelize
 import me.arianb.usb_hid_client.BuildConfig
 import me.arianb.usb_hid_client.getParcelableCompat
-import me.arianb.usb_hid_client.hid_utils.UsbGadgetService.Companion.GADGET_PREF_BUNDLE_KEY
 import me.arianb.usb_hid_client.settings.GadgetUserPreferences
 import timber.log.Timber
 import java.io.IOException
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import kotlin.io.path.*
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createSymbolicLinkPointingTo
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.deleteRecursively
+import kotlin.io.path.div
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.isSymbolicLink
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
+import kotlin.io.path.writeBytes
+import kotlin.io.path.writeText
+import kotlin.io.path.writer
 
 class UsbGadgetService : RootService() {
     init {
@@ -91,47 +101,6 @@ class UsbGadgetService : RootService() {
 
         const val MSG_CREATE = 0
         const val MSG_DELETE = 1
-    }
-}
-
-class UsbGadgetServiceConnection : ServiceConnection {
-    private var mService: Messenger? = null
-
-    val isBound: Boolean
-        get() = mService != null
-
-    override fun onServiceConnected(className: ComponentName, service: IBinder) {
-        mService = Messenger(service)
-    }
-
-    override fun onServiceDisconnected(className: ComponentName) {
-        // This is called when the connection with the service has been
-        // unexpectedly disconnected; that is, its process crashed.
-        mService = null
-    }
-
-    private fun send(messageType: Int, preferences: GadgetUserPreferences) {
-        if (!isBound) {
-            Timber.w("Attempted to communicate with service using unbound connection")
-            return
-        }
-
-        val msg = Message.obtain(null, messageType).apply {
-            data.putParcelable(GADGET_PREF_BUNDLE_KEY, preferences)
-        }
-        try {
-            mService!!.send(msg)
-        } catch (e: RemoteException) {
-            Timber.e(e)
-        }
-    }
-
-    fun createGadget(preferences: GadgetUserPreferences) {
-        send(UsbGadgetService.MSG_CREATE, preferences)
-    }
-
-    fun deleteGadget(preferences: GadgetUserPreferences) {
-        send(UsbGadgetService.MSG_DELETE, preferences)
     }
 }
 
