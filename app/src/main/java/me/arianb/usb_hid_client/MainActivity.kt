@@ -1,7 +1,9 @@
 package me.arianb.usb_hid_client
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -13,6 +15,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.transitions.SlideTransition
+import com.nottoostabby.superdongle.KeyboardHelper
 import com.topjohnwu.superuser.Shell
 import me.arianb.usb_hid_client.settings.SettingsViewModel
 import me.arianb.usb_hid_client.troubleshooting.ProductionTree
@@ -41,6 +44,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Entrypoint()
+        }
+    }
+
+    @SuppressLint("RestrictedApi")
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        Timber.d(event.toString())
+
+        if (KeyboardHelper.isTranslatedKeyCode(event)) {
+            val newKeyCode = KeyboardHelper.getTranslatedKeyCode(event)
+            val newEvent = KeyEvent(event.action, newKeyCode)
+            Timber.d(newEvent.toString())
+
+            super.dispatchKeyEvent(newEvent)
+            return true
+        } else {
+            return super.dispatchKeyEvent(event)
         }
     }
 }

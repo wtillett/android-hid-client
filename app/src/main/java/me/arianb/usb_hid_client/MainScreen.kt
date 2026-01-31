@@ -1,10 +1,6 @@
 package me.arianb.usb_hid_client
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -26,8 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,10 +29,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import me.arianb.usb_hid_client.input_views.DirectInput
+import com.nottoostabby.superdongle.DirectInput
 import me.arianb.usb_hid_client.input_views.DirectInputIconButton
-import me.arianb.usb_hid_client.input_views.ManualInput
-import me.arianb.usb_hid_client.input_views.Touchpad
 import me.arianb.usb_hid_client.settings.SettingsScreen
 import me.arianb.usb_hid_client.settings.SettingsViewModel
 import me.arianb.usb_hid_client.shell_utils.RootStateHolder
@@ -46,7 +38,6 @@ import me.arianb.usb_hid_client.troubleshooting.TroubleshootingScreen
 import me.arianb.usb_hid_client.ui.standalone_screens.HelpScreen
 import me.arianb.usb_hid_client.ui.standalone_screens.InfoScreen
 import me.arianb.usb_hid_client.ui.theme.PaddingNormal
-import me.arianb.usb_hid_client.ui.utils.BasicPage
 import me.arianb.usb_hid_client.ui.utils.BasicTopBar
 import me.arianb.usb_hid_client.ui.utils.DarkLightModePreviews
 import timber.log.Timber
@@ -69,7 +60,8 @@ fun MainPage(
     // TODO: should i do this in VM constructor? but then I cant differentiate between
     //       missing char dev on startup or a weird issue of it missing AFTER startup.
     //       but should I even do that? should I just handle both situations the same way?
-    val showMissingCharDeviceOnStartupAlert = remember { mutableStateOf(mainViewModel.anyCharacterDeviceMissing()) }
+    val showMissingCharDeviceOnStartupAlert =
+        remember { mutableStateOf(mainViewModel.anyCharacterDeviceMissing()) }
 
     val uiState by mainViewModel.uiState.collectAsState()
     Timber.d("in MainScreen, uiState is: %s", uiState.toString())
@@ -77,82 +69,71 @@ fun MainPage(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val preferences by settingsViewModel.userPreferencesFlow.collectAsState()
-    val isDeviceInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isDeviceInLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val hideManualInput = preferences.isTouchpadFullscreenInLandscape && isDeviceInLandscape
 
     val padding = PaddingNormal
-    BasicPage(
-        snackbarHostState = snackbarHostState,
-        topBar = { MainTopBar() },
 
-        // The padding below the top app bar is pretty big, so omit top padding
-        padding = PaddingValues(start = padding, end = padding, bottom = padding),
+    if (showMissingCharDeviceOnStartupAlert.value) {
+        Timber.d("MISSING CHAR DEV ON START")
+        CreateCharDevicesAlertDialog(showMissingCharDeviceOnStartupAlert)
+    }
 
-        horizontalAlignment = Alignment.CenterHorizontally,
+//        if (!hideManualInput) {
+//            ManualInput()
+//            Spacer(Modifier.height(PaddingNormal))
+//        }
 
-        // I have to manually manage the spacing of elements here, because of the special case of having an invisible
-        // View (Direct Input). Otherwise, there's gonna be an awkward spacing created by the invisible View.
-        verticalArrangement = Arrangement.Top
-    ) {
-        if (showMissingCharDeviceOnStartupAlert.value) {
-            Timber.d("MISSING CHAR DEV ON START")
-            CreateCharDevicesAlertDialog(showMissingCharDeviceOnStartupAlert)
-        }
+    // This has to be here, if I move it below Touchpad(), it never gets focused. I think it's because it ends up
+    // out of the user's view, so Android just doesn't allow it to gain focus.
+    DirectInput()
 
-        if (!hideManualInput) {
-            ManualInput()
-            Spacer(Modifier.height(PaddingNormal))
-        }
+//        Touchpad()
 
-        // This has to be here, if I move it below Touchpad(), it never gets focused. I think it's because it ends up
-        // out of the user's view, so Android just doesn't allow it to gain focus.
-        DirectInput()
-
-        Touchpad()
-
-        LaunchedEffect(uiState) {
-            Timber.d("LAUNCHED EFFECT RUNNING WITH UI STATE = %s", uiState.toString())
-            if (rootState.missingRootPrivileges) {
-                // TODO: if this fails here, I need to make it incredibly clear that the app will not work.
-                //       right now, you can still try to use it and it'll fail. It should just "lock" the inputs
-                //       if this fails I think.
-                snackbarHostState.showSnackbar(
-                    message = "Missing root permissions",
-                    duration = SnackbarDuration.Long
-                )
-            } else if (uiState.isDeviceUnplugged) {
-                snackbarHostState.showSnackbar(
-                    message = "ERROR: Your device seems to be disconnected. If not, try reseating the USB cable",
-                    duration = SnackbarDuration.Long
-                )
-            } else if (!showMissingCharDeviceOnStartupAlert.value && uiState.missingCharacterDevice) {
-                val result = snackbarHostState.showSnackbar(
-                    message = "ERROR: Character device has disappeared since the app was started.",
-                    actionLabel = "RECREATE",
-                )
-                when (result) {
-                    SnackbarResult.ActionPerformed -> {
-                        mainViewModel.createCharacterDevices()
-                    }
-
-                    SnackbarResult.Dismissed -> {}
+    LaunchedEffect(uiState) {
+        Timber.d("LAUNCHED EFFECT RUNNING WITH UI STATE = %s", uiState.toString())
+        if (rootState.missingRootPrivileges) {
+            // TODO: if this fails here, I need to make it incredibly clear that the app will not work.
+            //       right now, you can still try to use it and it'll fail. It should just "lock" the inputs
+            //       if this fails I think.
+            snackbarHostState.showSnackbar(
+                message = "Missing root permissions",
+                duration = SnackbarDuration.Long
+            )
+        } else if (uiState.isDeviceUnplugged) {
+            snackbarHostState.showSnackbar(
+                message = "ERROR: Your device seems to be disconnected. If not, try reseating the USB cable",
+                duration = SnackbarDuration.Long
+            )
+        } else if (!showMissingCharDeviceOnStartupAlert.value && uiState.missingCharacterDevice) {
+            val result = snackbarHostState.showSnackbar(
+                message = "ERROR: Character device has disappeared since the app was started.",
+                actionLabel = "RECREATE",
+            )
+            when (result) {
+                SnackbarResult.ActionPerformed -> {
+                    mainViewModel.createCharacterDevices()
                 }
-            } else if (uiState.isCharacterDevicePermissionsBroken != null) {
-                val characterDevicePath = uiState.isCharacterDevicePermissionsBroken!!
-                val result = snackbarHostState.showSnackbar(
-                    message = "ERROR: Character device permissions seem incorrect.",
-                    actionLabel = "FIX",
-                )
-                when (result) {
-                    SnackbarResult.ActionPerformed -> {
-                        mainViewModel.fixCharacterDevicePermissions(characterDevicePath)
-                    }
 
-                    SnackbarResult.Dismissed -> {}
+                SnackbarResult.Dismissed -> {}
+            }
+        } else if (uiState.isCharacterDevicePermissionsBroken != null) {
+            val characterDevicePath = uiState.isCharacterDevicePermissionsBroken!!
+            val result = snackbarHostState.showSnackbar(
+                message = "ERROR: Character device permissions seem incorrect.",
+                actionLabel = "FIX",
+            )
+            when (result) {
+                SnackbarResult.ActionPerformed -> {
+                    mainViewModel.fixCharacterDevicePermissions(characterDevicePath)
                 }
+
+                SnackbarResult.Dismissed -> {}
             }
         }
     }
+
 }
 
 private typealias MenuItem = Pair<Screen, String>
@@ -178,7 +159,10 @@ private fun MainTopBar() {
                 ) {
                     val menuItems = arrayOf(
                         MenuItem(SettingsScreen(), stringResource(R.string.settings)),
-                        MenuItem(TroubleshootingScreen(), stringResource(R.string.troubleshooting_title)),
+                        MenuItem(
+                            TroubleshootingScreen(),
+                            stringResource(R.string.troubleshooting_title)
+                        ),
                         MenuItem(HelpScreen(), stringResource(R.string.help)),
                         MenuItem(InfoScreen(), stringResource(R.string.info))
                     )
@@ -220,7 +204,10 @@ private fun MainTopBar() {
 }
 
 @Composable
-private fun CreateCharDevicesAlertDialog(showAlert: MutableState<Boolean>, mainViewModel: MainViewModel = viewModel()) {
+private fun CreateCharDevicesAlertDialog(
+    showAlert: MutableState<Boolean>,
+    mainViewModel: MainViewModel = viewModel()
+) {
     AlertDialog(
         title = { Text("Character device(s) do not exist") },
         text = { Text("Add HID functions to the default USB gadget? This must be re-done after every reboot.\n\n**The app will not work if you decline**") },
