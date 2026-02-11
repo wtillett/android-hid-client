@@ -69,6 +69,9 @@ height="350">](images/app-screenshot3.png)
 alt="Help screen with frequently asked questions"
 height="350">](images/app-screenshot4.png)
 
+This is a fork of Arian04's android-hid-client. The specific intention of the fork is to create an app
+that can be used like a ZMK dongle for keyboards with ZMK firmware.
+
 This Android app allows you your phone to present itself to a connected device as a keyboard and mouse.
 Since this happens at a very low level, the connected device sees it exactly as a normal keyboard and mouse, meaning
 you don't need to install any software on the connected computer! For this reason, it will even work if the
@@ -116,14 +119,6 @@ Tested primarily on: Linux (Host computer) and Pixel 5 running Android 14.
     - I test the app with Gboard and Unexpected Keyboard, but Unexpected Keyboard is the one with slightly better
       support, more keys,
       and [fewer issues](https://github.com/Arian04/android-hid-client/issues?q=label%3A"soft+keyboard+issue").
-
-### Installation (Binary)<a name="installation-binary"> </a>
-
-The recommended way to install the app is through the [IzzyOnDroid repo][izzyondroid-url] via an app
-that's compatible with F-Droid style repositories, since that'll make updates much easier. However, you can also
-download
-the APK file from the [Github releases page](https://github.com/Arian04/android-hid-client/releases), then install it
-on your Android device.
 
 ### Installation (Source)<a name="installation-source"></a>
 
