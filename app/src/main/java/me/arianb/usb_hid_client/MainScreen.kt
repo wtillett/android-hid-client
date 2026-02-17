@@ -3,8 +3,6 @@ package me.arianb.usb_hid_client
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -27,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,10 +32,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.nottoostabby.dongle.DongleScreenIconButton
 import me.arianb.usb_hid_client.input_views.DirectInput
-import me.arianb.usb_hid_client.input_views.DirectInputIconButton
-import me.arianb.usb_hid_client.input_views.ManualInput
-import me.arianb.usb_hid_client.input_views.Touchpad
 import me.arianb.usb_hid_client.settings.SettingsScreen
 import me.arianb.usb_hid_client.settings.SettingsViewModel
 import me.arianb.usb_hid_client.shell_utils.RootStateHolder
@@ -69,7 +64,8 @@ fun MainPage(
     // TODO: should i do this in VM constructor? but then I cant differentiate between
     //       missing char dev on startup or a weird issue of it missing AFTER startup.
     //       but should I even do that? should I just handle both situations the same way?
-    val showMissingCharDeviceOnStartupAlert = remember { mutableStateOf(mainViewModel.anyCharacterDeviceMissing()) }
+    val showMissingCharDeviceOnStartupAlert =
+        remember { mutableStateOf(mainViewModel.anyCharacterDeviceMissing()) }
 
     val uiState by mainViewModel.uiState.collectAsState()
     Timber.d("in MainScreen, uiState is: %s", uiState.toString())
@@ -77,13 +73,14 @@ fun MainPage(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val preferences by settingsViewModel.userPreferencesFlow.collectAsState()
-    val isDeviceInLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isDeviceInLandscape =
+        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val hideManualInput = preferences.isTouchpadFullscreenInLandscape && isDeviceInLandscape
 
     val padding = PaddingNormal
     BasicPage(
         snackbarHostState = snackbarHostState,
-        topBar = { MainTopBar() },
+        topBar = { },
 
         // The padding below the top app bar is pretty big, so omit top padding
         padding = PaddingValues(start = padding, end = padding, bottom = padding),
@@ -99,16 +96,16 @@ fun MainPage(
             CreateCharDevicesAlertDialog(showMissingCharDeviceOnStartupAlert)
         }
 
-        if (!hideManualInput) {
-            ManualInput()
-            Spacer(Modifier.height(PaddingNormal))
-        }
+//        if (!hideManualInput) {
+//            ManualInput()
+//            Spacer(Modifier.height(PaddingNormal))
+//        }
 
         // This has to be here, if I move it below Touchpad(), it never gets focused. I think it's because it ends up
         // out of the user's view, so Android just doesn't allow it to gain focus.
         DirectInput()
 
-        Touchpad()
+//        Touchpad()
 
         LaunchedEffect(uiState) {
             Timber.d("LAUNCHED EFFECT RUNNING WITH UI STATE = %s", uiState.toString())
@@ -151,6 +148,7 @@ fun MainPage(
                     SnackbarResult.Dismissed -> {}
                 }
             }
+
         }
     }
 }
@@ -166,7 +164,8 @@ private fun MainTopBar() {
     BasicTopBar(
         title = stringResource(R.string.app_name),
         actions = {
-            DirectInputIconButton()
+//            DirectInputIconButton()
+            DongleScreenIconButton()
             IconButton(onClick = { showDropdownMenu = true }) {
                 Icon(
                     imageVector = Icons.Outlined.MoreVert,
@@ -178,9 +177,12 @@ private fun MainTopBar() {
                 ) {
                     val menuItems = arrayOf(
                         MenuItem(SettingsScreen(), stringResource(R.string.settings)),
-                        MenuItem(TroubleshootingScreen(), stringResource(R.string.troubleshooting_title)),
+                        MenuItem(
+                            TroubleshootingScreen(),
+                            stringResource(R.string.troubleshooting_title)
+                        ),
                         MenuItem(HelpScreen(), stringResource(R.string.help)),
-                        MenuItem(InfoScreen(), stringResource(R.string.info))
+                        MenuItem(InfoScreen(), stringResource(R.string.info)),
                     )
                     for (item in menuItems) {
                         DropdownMenuItem(
@@ -220,7 +222,10 @@ private fun MainTopBar() {
 }
 
 @Composable
-private fun CreateCharDevicesAlertDialog(showAlert: MutableState<Boolean>, mainViewModel: MainViewModel = viewModel()) {
+private fun CreateCharDevicesAlertDialog(
+    showAlert: MutableState<Boolean>,
+    mainViewModel: MainViewModel = viewModel()
+) {
     AlertDialog(
         title = { Text("Character device(s) do not exist") },
         text = { Text("Add HID functions to the default USB gadget? This must be re-done after every reboot.\n\n**The app will not work if you decline**") },

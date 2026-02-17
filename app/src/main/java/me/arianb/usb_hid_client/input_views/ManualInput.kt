@@ -83,6 +83,6 @@ fun sendInput(stringToSend: String, mainViewModel: MainViewModel) {
             return
         }
 
-        mainViewModel.addStandardKey(scanCodes.first, scanCodes.second)
+        mainViewModel.addStandardKey(scanCodes.first, scanCodes.second, 1)
     }
 }

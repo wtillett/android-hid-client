@@ -1,18 +1,26 @@
 package me.arianb.usb_hid_client.input_views
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.compose.LocalActivity
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -33,7 +41,11 @@ class DirectInputKeyboardView : AppCompatEditText {
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    )
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection {
         Timber.i("onCreateInputConnection() called")
@@ -59,7 +71,14 @@ fun DirectInput(
     settingsViewModel: SettingsViewModel = viewModel(),
 ) {
     val keySender by mainViewModel.keySender.collectAsState()
+    val uiState by mainViewModel.uiState.collectAsState()
     val userPreferencesState by settingsViewModel.userPreferencesFlow.collectAsState()
+
+    val localView = LocalView.current
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+
+    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
     AndroidViewBinding(
         factory = DirectInputViewBinding::inflate,
@@ -91,6 +110,22 @@ fun DirectInput(
             }
         }
     )
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(text = "In Column")
+//        KeyMap()
+        Row() {
+//            LeftBattery()
+//            RightBattery()
+        }
+    }
+
+    LaunchedEffect(uiState) {
+//        val etDirectInput = localView.findViewById<DirectInputKeyboardView>(R.id.etDirectInput)
+//        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+//        etDirectInput.requestFocus()
+//        imm.showSoftInput(etDirectInput, 0)
+
+    }
 }
 
 @Composable

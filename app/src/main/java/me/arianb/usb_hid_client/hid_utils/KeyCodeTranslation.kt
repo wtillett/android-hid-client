@@ -51,19 +51,20 @@ object KeyCodeTranslation {
     fun keyCodeToScanCode(keyCode: Int): Byte? =
         hidKeyCodes[keyEventKeys[keyCode]]
 
+    private fun isBitEnabledInMask(data: Int, mask: Int): Boolean {
+        val isPresent: Boolean = (data and mask) == mask
+
+        return isPresent
+    }
+
+    @OptIn(ExperimentalStdlibApi::class)
     fun getModifiersScanCode(event: KeyEvent): Byte {
         var modifier: Byte = 0x0
-        if (event.isShiftPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_SHIFT_LEFT_ON)
-        }
-        if (event.isCtrlPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_CTRL_LEFT_ON)
-        }
-        if (event.isAltPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_ALT_LEFT_ON)
-        }
-        if (event.isMetaPressed) {
-            modifier = modifier or modifierKeyCodeToScanCode(META_META_LEFT_ON)
+        for ((modifierKeyCode: Int, _) in keyEventModifierKeys) {
+            if (isBitEnabledInMask(event.modifiers, modifierKeyCode)) {
+                val scanCode = modifierKeyCodeToScanCode(modifierKeyCode)
+                modifier = modifier or scanCode
+            }
         }
 
         return modifier
@@ -174,6 +175,18 @@ object KeyCodeTranslation {
         putKey(KEYCODE_MEDIA_PLAY_PAUSE, "play-pause", 0xcd.toByte())
         putKey(KEYCODE_VOLUME_UP, "volume-up", 0xe9.toByte())
         putKey(KEYCODE_VOLUME_DOWN, "volume-down", 0xea.toByte())
+
+        putKey(KEYCODE_CAPS_LOCK, "caps-lock", 0x39)
+
+        // translate modifier keys for modifying mouse clicks
+        putKey(KEYCODE_CTRL_LEFT, "left-ctrl", 0xe0.toByte())
+        putKey(KEYCODE_SHIFT_LEFT, "left-shift", 0xe1.toByte())
+        putKey(KEYCODE_ALT_LEFT, "left-alt", 0xe2.toByte())
+        putKey(KEYCODE_META_LEFT, "left-meta", 0xe3.toByte())
+        putKey(KEYCODE_CTRL_RIGHT, "right-ctrl", 0xe4.toByte())
+        putKey(KEYCODE_SHIFT_RIGHT, "right-shift", 0xe5.toByte())
+        putKey(KEYCODE_ALT_RIGHT, "right-alt", 0xe6.toByte())
+        putKey(KEYCODE_META_RIGHT, "right-meta", 0xe7.toByte())
 
         // translate modifier keys
         putModifierKey(0, "no-modifier", 0x0)

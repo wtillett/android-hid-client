@@ -4,9 +4,15 @@ import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.core.screen.Screen
@@ -39,6 +45,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+
+        windowInsetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { view, windowInsets ->
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+            ViewCompat.onApplyWindowInsets(view, windowInsets)
+        }
+
         setContent {
             Entrypoint()
         }
@@ -46,7 +64,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Entrypoint(settingsViewModel: SettingsViewModel = viewModel()) {
+fun Entrypoint(
+    settingsViewModel: SettingsViewModel = viewModel(),
+    modifier: Modifier = Modifier.fillMaxSize()
+) {
     val userPreferencesState by settingsViewModel.userPreferencesFlow.collectAsState()
 
     // If this is the first time the app has been opened, then show OnboardingActivity

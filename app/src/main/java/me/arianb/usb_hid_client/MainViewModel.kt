@@ -44,7 +44,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val characterDeviceManager = CharacterDeviceManager.getInstance(application)
     private val rootStateHolder = RootStateHolder.getInstance()
-    private val userPreferencesStateFlow = UserPreferencesRepository.getInstance(application).userPreferencesFlow
+    private val userPreferencesStateFlow =
+        UserPreferencesRepository.getInstance(application).userPreferencesFlow
 
     val keySender: StateFlow<KeySender> = userPreferencesStateFlow
         .mapState {
@@ -80,7 +81,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         },
                         onException = { e ->
                             val characterDevicePath = sender.characterDevicePath
-                            if (e is FileNotFoundException && characterDeviceMissing(characterDevicePath)) {
+                            if (e is FileNotFoundException && characterDeviceMissing(
+                                    characterDevicePath
+                                )
+                            ) {
                                 Timber.i("Character device '$characterDevicePath' doesn't exist. The user probably skipped the character device creation prompt.")
                             } else {
                                 handleException(e, sender.characterDevicePath)
@@ -121,7 +125,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
-            val gadgetUserPreferences = GadgetUserPreferences.fromUserPreferences(userPreferencesStateFlow.value)
+            val gadgetUserPreferences =
+                GadgetUserPreferences.fromUserPreferences(userPreferencesStateFlow.value)
             characterDeviceManager.createCharacterDevices(gadgetUserPreferences)
 
             // Re-evaluate state
@@ -136,7 +141,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         viewModelScope.launch {
-            val gadgetUserPreferences = GadgetUserPreferences.fromUserPreferences(userPreferencesStateFlow.value)
+            val gadgetUserPreferences =
+                GadgetUserPreferences.fromUserPreferences(userPreferencesStateFlow.value)
             characterDeviceManager.deleteCharacterDevices(gadgetUserPreferences)
 
             // Re-evaluate state
@@ -172,8 +178,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Keyboard
-    fun addStandardKey(modifier: Byte, key: Byte) =
-        keySender.value.addStandardKey(modifier, key)
+    fun addStandardKey(modifier: Byte, key: Byte, action: Int) =
+        keySender.value.addStandardKey(modifier, key, action)
 
     fun addMediaKey(key: Byte) =
         keySender.value.addMediaKey(key)

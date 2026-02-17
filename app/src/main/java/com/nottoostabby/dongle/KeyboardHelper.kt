@@ -1,24 +1,24 @@
-package me.arianb.usb_hid_client.input_views
+package com.nottoostabby.dongle
 
 import android.view.KeyEvent
-import android.view.View
-import android.view.inputmethod.BaseInputConnection
-import android.view.inputmethod.TextAttribute
 import me.arianb.usb_hid_client.hid_utils.KeyCodeTranslation
 import me.arianb.usb_hid_client.report_senders.KeySender
 import timber.log.Timber
 
-class MyInputConnection(
-    private val keySender: KeySender,
-    targetView: View,
-    fullEditor: Boolean
-) : BaseInputConnection(targetView, fullEditor) {
-    override fun sendKeyEvent(event: KeyEvent?): Boolean {
+object KeyboardHelper {
+
+    lateinit var keySender: KeySender
+
+//    fun setKeySender(sender: KeySender) {
+//        keySender = sender
+//    }
+
+    fun sendKeyEvent(event: KeyEvent?): Boolean {
         if (event == null) {
-            Timber.w("input connection received null KeyEvent")
+            Timber.w("KeyboardHelper received null KeyEvent")
             return false
         }
-        Timber.d("input connection received KeyEvent: %s", event.toString())
+        Timber.d("KeyboardHelper received KeyEvent: ${event.toString()}")
 
         val keyCode = event.keyCode
         val action = event.action
@@ -59,12 +59,5 @@ class MyInputConnection(
         return true
     }
 
-    override fun commitText(
-        text: CharSequence,
-        newCursorPosition: Int,
-        textAttribute: TextAttribute?
-    ): Boolean {
-        Timber.w("input connection sending CharSequence: %s", text)
-        return super.commitText(text, newCursorPosition, textAttribute)
-    }
+
 }
